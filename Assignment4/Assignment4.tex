@@ -1,0 +1,47 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage, parskip, amsmath, amsthm, amssymb, mathtools, algorithm, algpseudocode}
+
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+
+\begin{document}
+
+\begin{center}
+    {\Large CSC373H1 - Assignment 4}
+\end{center}
+
+\textbf{Question 1}
+
+a) For any $c\geq 1$, fix $B>c+c^2$. Suppose there are only proposals 1 and 2, where $x_1=c,y_1=1+c$ and $x_2,y_2=B$. Only one proposal can be picked by any algorithm since $\sum_{i\in\{1,2\}} x_i=B+c>B$. ALG picks proposal 1 since $\frac{y_1}{x_1}=\frac{1+c}{c}>\frac{y_2}{x_2}=\frac{B}{B}=1$. OPT picks proposal 2 since $y_2=B>c+c^2\geq y_1=1+c$. Profit(ALG) $=1+c<\frac{B}{c}=\frac{1}{c}$ Profit(OPT) since $B>c+c^2$, as desired.
+
+b) Assume that $k<n$, so project $k+1$ exists. Define $\epsilon=\frac{B-\sum_{i=1}^k x_i}{x_{k+1}}$, which $\in[0,1)$ since $\sum_{i=1}^k x_i+x_{k+1}>B$. Define OPT as the optimal solution with only an integral number of projects. Define OPT' as the solution which extends OPT by spending its remaining budget to pick a fraction of a project.
+
+Consider a solution $S$ that sorts the projects as in part (a) and picks $\{1,\ldots,k\}$ and an $\epsilon$-fraction of $k+1$, s.t. $\sum_{i=1}^k x_i+\epsilon x_{k+1}=B$. By Lemmas 1 and 2, this is the optimal solution if $B$ is to be spent entirely. Then, Profit(S) $\geq$ Profit(OPT') $\geq$ Profit(OPT). From this, $2\max(\sum_{i=1}^k y_i,y_{k+1})\geq\sum_{i=1}^k y_i+y_{k+1}>\sum_{i=1}^k y_i+\epsilon y_{k+1}=$ Profit(S) $\geq$ Profit(OPT). Since the modified algorithm picks $\max(\sum_{i=1}^k y_i$, $y_{k+1})$, it achieves a 2-approximation.
+
+\textbf{Lemma 1:} Replacing any subset of the projects chosen by $S$ with later projects cannot increase the total profit. Assume $\{1,\ldots,n\}$ are sorted as in part (a). Define $A\subseteq\{1,\ldots,k+1\}$ as the set of projects to be replaced, $C\subseteq\{k+2,\ldots,n\}$ as their replacement, and $\alpha_j\in(0,1]$ as the fraction of $j\in C$ to include. Note that
+
+\begin{itemize}
+    \item $\forall i\in A, \dfrac{y_i}{x_i}\geq\dfrac{y_{k+1}}{x_{k+1}}$, so $\sum_{i\in A} y_i\geq\dfrac{y_{k+1}}{x_{k+1}}\sum_{i\in A} x_i$, and
+    \item $\forall j\in C,\alpha_j\dfrac{y_j}{x_j}\leq\alpha_j\dfrac{y_{k+1}}{x_{k+1}}$, so $\sum_{j\in C} \alpha_jy_j\leq \dfrac{y_{k+1}}{x_{k+1}}\sum_{j\in C} \alpha_jx_j$.
+\end{itemize}
+
+If $k+1\notin A$:
+
+\begin{itemize}
+    \item $\sum_{j\in C} \alpha_jx_j \leq\sum_{i\in A} x_i$, or else the projects in $C$ would not fit in the spaces in the budget left by removing $A$.
+    \item Thus, $\sum_{j\in C} \alpha_jy_j\leq \dfrac{y_{k+1}}{x_{k+1}}\sum_{j\in C} \alpha_jx_j\leq \dfrac{y_{k+1}}{x_{k+1}}\sum_{i\in A} x_i\leq \sum_{i\in A} y_i$, which is the total profit of A.
+\end{itemize}
+
+If $k+1\in A$:
+
+\begin{itemize}
+    \item $\sum_{j\in C} \alpha_jx_j \leq\sum_{i\in A\setminus\{k+1\}} x_i + \epsilon x_{k+1}$, or else the projects in $C$ would not fit in the spaces in the budget left by removing $A$.
+    \item Thus, $\sum_{j\in C} \alpha_jy_j\leq \dfrac{y_{k+1}}{x_{k+1}}\sum_{j\in C} \alpha_jx_j\leq \dfrac{y_{k+1}}{x_{k+1}}(\sum_{i\in A\setminus\{k+1\}} x_i + \epsilon x_{k+1})\leq \sum_{i\in A\setminus\{k+1\}} y_i + \dfrac{y_{k+1}}{x_{k+1}}(\epsilon x_{k+1}) = \sum_{i\in A\setminus\{k+1\}} y_i + \epsilon y_{k+1}$, which is the total profit of A.
+\end{itemize}
+
+\textbf{Lemma 2:} Define $\alpha=\dfrac{B-\sum_{i\in\{1,\ldots,k+1\}\setminus\{j\}}x_i}{x_{j}}$ for $j<k+1$. If $S$ instead picks the entire project $k+1$ and only picks an $\alpha$-fraction of project $j$, the total profit cannot increase. This is since \begin{align*}
+    \frac{y_j}{x_j}\geq\frac{y_{k+1}}{x_{k+1}} &\iff\frac{\sum_{i=1}^{k+1} x_i-B}{x_j}y_j\geq\frac{\sum_{i=1}^{k+1} x_i-B}{x_{k+1}}y_{k+1}\\
+    &\iff (1-\frac{B-\sum_{i\in\{1,\ldots,k+1\}\setminus\{j\}} x_i}{x_j})y_j\geq(1-\frac{B-\sum_{i=1}^k x_i}{x_{k+1}})y_{k+1}\\
+    &\iff y_j+\epsilon y_{k+1}\geq\alpha y_j+y_{k+1}.
+\end{align*}
+
+\end{document}

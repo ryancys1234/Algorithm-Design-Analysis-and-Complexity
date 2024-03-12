@@ -1,0 +1,123 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage, parskip, amsmath, amsthm, amssymb, algorithm, algpseudocode}
+
+\begin{document}
+
+\begin{center}
+    {\Large CSC373H1 - Assignment 1}
+\end{center}
+
+\textbf{Question 3}
+
+a) The algorithm increments in employees and assigns the first available task with skill demand $\leq$ the current employee's skill, if it exists. If not, the algorithm moves to the next employee.
+
+\begin{algorithm}[H]
+\caption{Task Assignment}
+\begin{algorithmic}[1]
+\State Sort the employees in a non-decreasing order of their skill level so that $s_1 \leq \ldots \leq s_n$
+\State Sort the tasks in a non-decreasing order of their minimum skill requirement so that $d_1 \leq \ldots \leq d_m$
+\State $j \gets 1$ \Comment Increments the tasks
+\For{Employee $i=1,\ldots,n$}
+\If{$d_j \leq s_i$}
+    \State Assign task $j$ to employee $i$
+    \State $j \gets j + 1$
+\EndIf
+\If{$j > m$} \Comment No more tasks left
+    \State Break the $for$ loop \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+b) The worst-case runtime is $O(n\log n + m\log m)$. Sorting the employees takes $O(n\log n)$ time, while sorting the tasks takes $O(m\log m)$ time. For each of the $n$ employees, a constant amount of work is done.
+
+c) Define $G_i$ and $O_i$ to be the sets of tasks assigned to employees $1,\ldots,i$ by the greedy (GRD) and optimal (OPT) approaches respectively. Since GRD considers the employees in order, assume WLOG that OPT also does this (see Lemma). We proceed by induction to show that $\forall i\in\{1,\ldots,n\},|G_i|=|O_i|$, where $|\cdot|$ denotes set size. This implies $|G_n|=|O_n|$, so GRD is as optimal as OPT.
+
+Base case ($i=1$): Assume both OPT and GRD has not considered any employee after 1 at this point. Consider two cases:
+
+\begin{itemize}
+    \item Case ($\exists$ task $j$ s.t. $d_j\leq s_1$): OPT assigns employee 1 to such a task. For GRD, this case implies that $d_1\leq s_1$, so it assigns employee 1 to task 1. Thus, $|G_i|=|O_i|=1$.
+    \item Case ($\forall$ tasks $j$, $d_j > s_1$): Both OPT and GRD do not assign employee 1 to a task, so $|G_i|=|O_i|=0$.
+\end{itemize}
+
+Induction step ($i>1$): Assume $|O_{i-1}|=|G_{i-1}|$ and both OPT and GRD has not considered any employee after $i$ at this point. Suppose for contradiction that $|O_i|>|G_i|$, which means $O_i$ includes a task $j$ assigned to employee $i$, but that $G_i$ does not assign employee $i$ to any task. Define $A_i=\{\text{tasks } j: d_j\leq s_{i}\}\setminus O_{i-1}$ to be the set of available tasks with demands $\leq s_i$, and similarly $B_i=\{\text{tasks } j: d_j\leq s_{i}\}\setminus G_{i-1}$. Task $j\in A_i$ but $\notin B_i$ since GRD must have assigned it to some other employee before employee $i$. Note that $|A_i|=|B_i|$ since $|O_{i-1}|=|G_{i-1}|$ and both OPT and GRD has not considered any employee after $i$. This means $B_i$ must contain an additional available task with demand $\leq s_i$ for the sets to be equal in size. Then, GRD can just assign employee $i$ to this task, yielding a contradiction. We conclude $|O_i|=|G_i|$, as needed.
+
+Lemma: Define OPT as the optimal approach that considers the employee in order and A as another approach that does not follow this order but is otherwise as similar to OPT as possible. We show OPT is at least as optimal as A. Since A does not follow the order, there must be $\geq 1$ pair of employees $x,y$ s.t. it considers $y$ before considering $x$ and $x<y$. Note $x<y\implies s_x\leq s_y$.
+
+\begin{itemize}
+    \item If A assigns $y$ to task $m$ and $x$ to task $n$, this implies either
+    \begin{itemize}
+        \item $d_m,d_n$ both $\leq s_x,s_y$, in which case OPT might make the same or opposite assignments depending on the order of $m$ and $n$, or
+        \item $d_n\leq s_x$ and $d_m \in (s_x,s_y]$, in which case OPT would make the same assignments.
+    \end{itemize}
+    \item If A assigns $y$ to task $m$ and leaves $x$ unassigned, this implies either
+    \begin{itemize}
+        \item $d_m\leq s_x$, in which case OPT would assign $x$ to $m$ and leave $y$ unassigned instead, or
+        \item $d_m\in (s_x,s_y]$, in which case OPT would make the same choice.
+    \end{itemize} Notice however that for the first sub-case, if there is an available task $n$ s.t. $s_x < d_n \leq s_y$, OPT would also assign $y$ to $n$, meaning it has 1 more task assigned than A.
+    \item If A leaves both $x,y$ unassigned, this implies there are no available tasks $m$ s.t. $d_m\leq s_y$, in which case OPT would make the same choice.
+\end{itemize}
+
+In all cases, the number of tasks assigned to each pair of employees by A is $\leq$ that of OPT.
+
+\textbf{Question 4}
+
+a) After each iteration $d$, the corresponding project $d$ should not have any employee who feels inferior since the algorithm should have moved all such employees to project $d+1$. Since the algorithm stops when the inferiority-freeness constraint holds for a newly-created project $k$, it must hold for all previously created projects as well.
+
+b) Base case: Suppose $k=2$. Since $i_2$ feels inferior to $i_1$, any solution must assign $i_2$ to project 2 while keeping $i_1$ in project 1.
+
+Inductive step: Let $k>2$, and assume any solution assigns $(i_1,\ldots,i_{k-1})$ to $k-1$ different projects since $s_1>\ldots>s_{k-1}$ and $t_1<\ldots<t_{k-1}$. Note that $i_{k-1}$ feels inferior to $i_k$ implies any employee before $i_{k-1}$ must also feel inferior to $i_k$, since $s_1>\ldots>s_{k-1}>s_k$ and $t_1<\ldots<t_{k-1}<t_k$. Thus, $i_k$ cannot be assigned to the same project as any other employee before it. This means any solution must assign $i_k$ to a new project $k$, and so any solution must assign $(i_1,\ldots,i_k)$ to $k$ different projects.
+
+c) Consider an arbitrary set of employees, and assume it is sorted as in part d. If it has $\geq 1$ sequence s.t. each employee feels inferior to the previous, it must have a longest such sequence. (Notice the sequence does not have to be contiguous.) Define this longest sequence as $S=(i_1,\ldots,i_k)$ for some $k\leq n$. By part b, any solution must have at least $k$ projects. Notice that the greedy solution (GRD) uses exactly $k$ projects for this set. This is because for every employee:
+
+\begin{itemize}
+    \item By the Lemma, the employee does not belong to S $\implies$ there must exist $\geq 1$ employee in S where neither employee feels inferior to the other. So, GRD can assign it to the same project as $\geq 1$ employee in S without it or the other feeling inferior. This does not affect the overall number of projects.
+    \item If GRD cannot assign the employee in this manner, by the contrapositive of the Lemma, it must belong to S. GRD, which produces a feasible solution by part a, already splits S up between $k$ projects by part b.
+\end{itemize} We conclude that $\#$ of projects needed by GRD $=k\leq\#$ of projects needed by any solution.
+
+Lemma: We show that an employee $i\notin S \implies \exists j\in S$ where neither $i$ nor $j$ feels inferior to the other. Suppose for contradiction that $i\notin S$ but $\forall j\in S$, either $i$ feels inferior to $j$ or vice versa.
+
+\begin{itemize}
+    \item If all $j$'s feel inferior to $i$ or $i$ feels inferior to all $j$'s, $i$ must be at the beginning or end of S by definition, a contradiction.
+    \item If $\exists j\in S, s_j<s_i \land t_i<t_j$ and $\exists j'\in S, s_{j'}>s_i \land t_i>t_{j'}$, then $s_j<s_i<s_{j'} \land t_{j'}<t_i<t_j$, and $i$ must be nested within S by definition, a contradiction.
+    \item If the previous cases cannot be reached, then there must exist an employee $j\in S$ where neither $i$ nor $j$ feels inferior to the other, a contradiction.
+\end{itemize}
+
+d) For the algorithm, since it sorts the employee twice, it only needs to compare each adjacent pair of employees.
+
+\begin{algorithm}[H]
+\caption{Project Division}
+\begin{algorithmic}[1]
+\State Sort the employees in order of their start time so that $s_1 \leq \ldots \leq s_n$
+\State If there are employees sharing a start time, sort them in non-decreasing order of their finish time
+\State Initialize an empty set Project 1 as a linked list and add the employees in order
+\State CurrentProject $\gets$ Project 1
+\State InferiorityExists $\gets$ $True$
+\State $d \gets 2$
+\While{InferiorityExists is $True$}
+\State Initialize an empty set Project $d$ as a linked list
+\State PreviousStart $\gets$ start time of first employee in CurrentProject
+\State PreviousEnd $\gets$ finish time of first employee in CurrentProject
+\For{Employee $e_i$ in CurrentProject} \Comment Iterating through the linked list
+\If{PreviousStart $< s_i$ and PreviousEnd $> t_i$}
+    \State Add $\{e_i\}$ to Project $d$
+    \State Remove $\{e_i\}$ from CurrentProject
+\Else
+    \State PreviousStart $\gets s_{i}$
+    \State PreviousEnd $\gets t_{i}$
+\EndIf
+\EndFor
+\If{Project $d$ is $\emptyset$}
+\Comment Only happens when CurrentProject is inferiority-free
+\State InferiorityExists $\gets False$
+\Comment Breaks the while loop
+\Else
+    \State CurrentProject $\gets$ Project $d$
+    \State $d \gets d + 1$
+\EndIf
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+The algorithm runs in $O(n^2)$ time since there can be at most $n$ projects and $n$ iterations in the while loop. For each project, the algorithm loops over all $\leq n$ employees assigned to it and performs a constant amount of work. Also, sorting the employees takes $O(n\log n)$ time, and moving employees from one project to another takes $O(n)$ time overall due to the linked list implementation.
+
+\end{document}

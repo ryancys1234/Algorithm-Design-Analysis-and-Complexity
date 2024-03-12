@@ -1,0 +1,163 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage, parskip, amsmath, amsthm, amssymb, mathtools, algorithm, algpseudocode}
+
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+
+\begin{document}
+
+\begin{center}
+    {\Large CSC373H1 - Assignment 2}
+\end{center}
+
+\textbf{Question 4}
+
+a) The network instance has a source $S$ and sink $T$. It has a node $(i,t)$ for each city $i\in V$ and for each $t\in \{0,\ldots,D\}$, which represent the cities at different times. Consider each $t$ to be a layer.
+
+For each edge $i\to j \in E$ and $t\in \{0,\ldots,D-1\}$, there is an edge between nodes $(i,t)$ and $(j,t+1)$ with capacity $c_{i,j}$. Also, for each city $i\in V$ and $t\in \{0,\ldots,D-1\}$, there is an edge between $(i,t)$ and $(i,t+1)$ with capacity $P$.
+
+Connect $S$ to $(a,0)$ and $T$ to $(b,D)$, both with a capacity of $P$. For each $i\in V\setminus\{b\}$, connect $T$ to $(i,D)$ with capacity 0. This is to ensure that Ford-Fulkerson doesn't send any flow through these nodes to $T$.
+
+If the amount of flow into $T$ is $P$, the plan is feasible within time $D$, and infeasible otherwise.
+
+b) We use the function BinSearch, which will call Helper. Helper attempts to find a solution with a given flow using Ford-Fulkerson; it returns the graph if true, and false otherwise. In BinSearch, we repeat calls to helper with input sizes $2^k$ for $k$ from 1 to some $i$ such that $2^i$ is the first power of 2 $\geq D'$, the smallest feasible $D$. Then, we perform a binary search on the interval $(2^{i-1},2^i]=(2^{\ceil{\log D'}-1}, 2^{\ceil{\log D'}}]$ since $D'$ must lie in it. For each iteration of the search, Helper creates a new graph and checks if a flow of $P$ is feasible.
+
+% Helper is also responsible for building the graph network and modifying it throughout the calls. In particular, the first call to Helper creates the global network, and for each subsequent increase in the power of 2, Helper adds the new layers of nodes and edges up to the new power. They also change the edges to $T$ to point from the last added layer. If $i=1$ is feasible, BinSearch returns it. When the second while loop of BinSearch is reached, $D\leq 2^i$, meaning we don't need to create more nodes or edges, and we now consider two cases:
+
+% \begin{itemize}
+%     \item $D>d$: Since we have to consider the layers up to $D$ and we only considered $d$ layers previously, we restore the initial capacities of edges between layers $d$ and $d+1$ since they must have been set to 0.
+%     \item $D<d$ Since we only consider the layers up to $D$ and we considered $D$ layers previously, we don't run Ford-Fulkerson on any layers after $D$, so we set the capacities of edges between layers $D$ and $D+1$ to 0.
+% \end{itemize}
+
+% In both cases, we modify the edges to $T$ so that they only point from the new layer $D$.
+
+\begin{algorithm}[H]
+\caption{Binary search for the smallest feasible $D$}
+\begin{algorithmic}[1]
+\Function{BinSearch}{$G,P$}
+\State $i=1$
+\While{Helper($G,P,2^i$) is $Null$} \Comment{Helper is on next page} \State $i \gets i+1$ \EndWhile
+\If{$i=1$} \State Return 1 \EndIf
+\State low $\gets 2^{i-1}$
+\State high $\gets 2^i$
+\While{low $\neq$ high - 1}
+\State mid $\gets$ (low + high) / 2
+\If{Helper($G,P,$ mid) is not $Null$} \State high $\gets$ mid
+\Else \State low $\gets$ mid
+\EndIf
+\EndWhile\\
+\Return{high}
+\Comment{High is always the smallest D upon termination. This is proved below.}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+We show that BinSearch finds $D'$. For the second while loop, the precondition is that $i>1$ since $i=1$ is addressed in the if statement on line 6. $i>1\implies 2^i>2^{i-1}+1$, so the loop runs at least once. We prove its correctness as follows:
+
+Loop invariant for iteration $k$ of the second while loop ($LI_k$): high is feasible (i.e., Helper(high) is not null) $\land$ low is not feasible $\land$ $\text{high}-\text{low}$ is a power of 2.
+
+\begin{itemize}
+    \item Base case: $LI_0$ holds since by the first while loop, Helper($2^i$) is not null and Helper($2^{i-1}$) is null. $2^i-2^{i-1}=2^{i-1}$, which is a power of 2.
+    \item Assume $LI_k$ and consider iteration $k+1$. If Helper(mid) is not null, high = mid is feasible, while low remains infeasible by $LI_k$. If Helper(mid) is null, low = mid is infeasible, while high remains feasible by $LI_k$. Also, $\text{high}-\text{mid}=\text{high}-\frac{\text{high}+\text{low}}{2}=\frac{\text{high}-\text{low}}{2}$, and similarly for $\text{mid}-\text{low}$. Since $\text{high}-\text{low}$ is a power of 2 by $LI_k$, $\frac{\text{high}-\text{low}}{2}$ is also. Thus, $LI_{k+1}$ holds.
+\end{itemize}
+
+The second while loop terminates since by $LI$, the size of (low, high] is a power of 2, and it is halved in each iteration. This means (low, high] will eventually have a size of 1, which corresponds to $\text{low}=\text{high}-1$, the termination requirement. When the loop terminates, by the $LI$, high is feasible and $\text{low}=\text{high}-1$ is infeasible, meaning that high $=D'$ is returned, as needed.
+
+% \begin{algorithm}[H]
+% \caption{Helper function to create the network}
+% \begin{algorithmic}[1]
+% \Function{Helper}{$G,P,D$}
+% \If{$N$ is $null$}
+% \State Create a global network $N$ to store all nodes and edges in
+% \State Create $S,T\in N$
+% \State Create all nodes and edges up to $t=D$ as described in (a)
+% \State $d\gets D$ \Comment{A global variable that keeps track of the last layer of $N$ previously looked at}
+% \ElsIf{$D>d$}
+% \If{nodes and their edges don't exist for some $t\in\{d+1,\ldots,D\}$}\\
+% \Comment{This part only runs in BinSearch's first while loop}
+% \State Create them for these $t$ as described in (a)
+% \State Create edges $(i,d)\to (j,d+1)$ with capacity $c_{ij}$ for $i\to j \in E$
+% \State Create edges $(i,d)\to (i,d+1)$ with capacity $P$ for $i\in V$
+% \Else
+% \State Change the capacities of edges $(i,D)\to (j,D+1)$ for $i\to j\in E$ to $c_{ij}$
+% \State Change the capacities of edges $(i,D)\to (i,D+1)$ for $i\in V$ to $P$
+% \EndIf
+% \State Change the $(i,d)\to T$ edges to be $(i,D)\to T$ for $i\in V$ with same capacities
+% \ElsIf{$D<d$}
+% \State Change the capacities of edges $(i,D)\to (j,D+1)$ for $i\to j\in E$ to 0
+% \State Change the capacities of edges $(i,D)\to (i,D+1)$ for $i\in V$ to 0
+% \State Change the $(i,d)\to T$ edges to be $(i,D)\to T$ for $i\in V$ with same capacities
+% \EndIf
+% \State $d\gets D$ \Comment{Updates $d$ to $D$ since $D$ is the last layer we've just looked at}
+% \State Compute a maximum flow $f$ in the above instance with Ford-Fulkerson
+% \If{$f=P$} \State return the constructed network
+% \Else \State return $Null$ 
+% \EndIf
+% \EndFunction
+% \end{algorithmic}
+% \end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Helper function to create the network}
+\begin{algorithmic}[1]
+\Function{Helper}{$G,P,D$}
+\State Create $S,T$
+\For{$t=0,\ldots,D$}
+\For{$i\in V$}
+\State Create node $(i,t)$
+\If{$t>0$} \State Create edge $(i,t-1)\to(i,t)$ with capacity $P$
+\EndIf
+\EndFor
+\EndFor
+\For{$(i,j)\in E$}
+\For{$t=0,\ldots,D-1$}
+\State Create edge $(i,t)\to(j,t+1)$ with capacity $c_{i,j}$
+\EndFor
+\EndFor
+\For{$i\in V$}
+\State Create edge $(i,D)\to T$ with capacity 0
+\EndFor
+\State Change edge $(b,D)\to T$ to capacity $P$
+\State Create edge $S\to(a,0)$ with capacity $P$
+\State Compute a maximum flow $f$ in the above instance with Ford-Fulkerson
+\If{$f=P$} \State return the constructed network
+\Else \State return $Null$ 
+\EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+We show that a maximum flow of $P$ is equivalent to a feasible $D$.
+
+($\implies$) Take any flow $P$, which is the maximum flow that $S$ can send out and $T$ can receive. We want to prove that $D$ is feasible. Since the only edge to $T$ with non-zero capacity is $(b,D)\to T$, it must be saturated with flow $P$. By conservation of flow, $(b,D)$ must be receiving $P$ flow for it to send it to $T$. This means every part of this flow passes through $(a,0)$ and $(b,D)$ along some $s-t$ path, which is length $D$ if disregarding $S$ and $T$ since edges are only between nodes at different $t$. This means $P$ people can travel to $b$ in $D$ steps of 1 unit time each, meaning $D$ is a feasible deadline.
+
+($\impliedby$) Assume $D$ is feasible. We want to show that there is a valid flow $P$ in the network described, which is the maximum possible. Notice:
+
+\begin{itemize}
+    \item Since the only edge to $T$ with non-zero capacity is $(b,D)\to T$, all flow must eventually arrive at $(b,D)$, which itself sends $P$ flow.
+    \item All edge capacities are the same as in $G$. Edges between the same cities at different times represent people who are waiting and have capacity $P$ (each city can hold $P$ people).
+    \item The length of any path from $(a,0)$ to $(b,D)$ is $D$ since edges are only between nodes at different $t$ (i.e., edges are always forward).
+\end{itemize}
+
+By the above and since $D$ is feasible, a flow $P$ sent from $S$ can take the same actions as in the original schedule, moving in a forward edge of the network for each increment of time, and arrive at $(b,D)$. Moreover, conservation of flow is respected since in the original schedule, the number of people going into or staying at a city at some $t$ is the same as the number leaving or staying at $t+1$. Thus, there is a valid and maximum flow of $P$ in the network.
+
+c) Define $n=|V|,m=|E|$. Note that every graph $G$ has $\geq$ one $a-b$ path and its edge capacities are all $\geq 1$. We can send each person into the graph individually with no spaces in between, like a queue. In this way, the last person must be free to move out of node $a$ at time $P+1$ after all preceding people have left $a$. Since this last person need only travel for $\leq n-1$ nodes before reaching $b$, which would take time $n-1$, every graph $G$ needs at most $P+1+n-1=P+n$ time for all people to arrive at $b$. Thus, $D'\leq P+n$.
+
+% $O \Big( (\log D')(n+m)(D'+P) \Big) = O \Big( (\log (P+n))(n+m)(P+n) \Big)$
+% $O \Big( (\log D')(n+m)P + (n+m)D' \Big) = O \Big( (\log(P+n))(n+m)P + (n+m)(P+n) \Big)$
+
+The overall runtime of BinSearch is $O((\log D')(n+m)D'P)=O \Big( (\log(P+n))(n+m)(P+n)P \Big)$, since:
+
+\begin{itemize}
+    \item The first while loop iterates over powers of 2 and stops at the smallest such power $\geq D'$, meaning that it runs for $\ceil{\log D'}\in O(\log D')$ steps. Each call to Helper calls Ford-Fulkerson, which is $O((n+m)D'P)$ since the maximum capacity is $P$ and there are $2^{\ceil{\log D'}}\approx D'$ layers of nodes and edges. Also, the loops at lines 3, 11, and 16 in Helper are $O(D'n)$, $O(D'm)$, and $O(n)$ respectively. In total, the first while loop of BinSearch is in $O((\log D')(n+m)D'P)$.
+    % At the end of the loop, a total of $2^{\ceil{\log D'}}\in O(D')$ layers have been created, where each layer has $n$ nodes and $m$ edges, so $O((n+m)D')$. Creating $S,T$ is $O(1)$ while creating the edges pointing to $T$ is $O(n)$. Overall, the first while loop is in $O((\log D')(D'n+D'm)P + (n+m)D')=O((\log D')(n+m)D'P)$.
+    \item The second while loop performs binary search over the space $(2^{\ceil{\log D'}-1}, 2^{\ceil{\log D'}}]$, which has size $2^{\ceil{\log D'}-1}$, meaning that it runs for around $O(\log(2^{\ceil{\log D'}-1}))=O(\log D')$ iterations. Each iteration of the second while loop runs Helper, which has the same runtime as noted above. In total, the second while loop of BinSearch is $O((\log D')(D'n+D'm)P)$.
+    % \begin{itemize}
+    %     \item will not create new nodes,
+    %     \item will change the $n$ edges pointing to $T$,
+    %     \item changes the capacities of $m$ edges between layers $d$ and $d+1$ if $D>d$, or between layers $D$ and $D+1$ if $D<d$.
+    % \end{itemize}
+    % For each call to Helper, the above actions take $O(n+m)$ time. Also, each call to Helper calls Ford-Fulkerson. Overall, the second while loop is in $O((\log D')(n+m)+(\log D')(n+m)D'P)=O((\log D')(n+m)D'P)$.
+    \item All other operations are $O(1)$.
+\end{itemize}
+
+\end{document}
