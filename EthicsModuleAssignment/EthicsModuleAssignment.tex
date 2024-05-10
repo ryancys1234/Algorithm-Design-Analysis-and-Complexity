@@ -1,0 +1,20 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage, amsmath}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\begin{center}
+    {\Large CSC373H1 - Ethics Module Assignment}
+\end{center}
+
+Construct the network with the set of nodes $\{s,t,v_1,\ldots,v_n,w_1,\ldots,w_m\}$, where each $v_i$ represents a country and each $w_r$ represents a warehouse, with the following edges:\begin{itemize}
+    \item $(s,w_r)$ with capacity $s_r$ for each $w_r$
+    \item $(v_i,t)$ with capacity $c_i$ for each $v_i$
+    \item $(w_r,v_i)$ with capacity $s_r$ if $(i,r)$ is in the list of pairs and $0$ otherwise
+\end{itemize} Then, the Ford-Fulkerson algorithm computes an integral maximal flow. We prove that there is a one-to-one correspondence between the flow of the network (not necessarily maximal) and total number of vaccines that can be allocated:\begin{itemize}
+    \item (Flow of $f$ in the network $\implies$ $f$ vaccines can be allocated) Assume there is a flow $f$ in the network. This means that $f$ moves from $s$ into the $(w_r,v_i)$ edges with positive capacities and then into $t$. Since each $w_r$ can receive at most $s_r$ flow from $s$ and each $v_i$ can send at most $c_i$ flow, each $(w_r,v_i)$ edge cannot have more than $\min(s_r,c_i)$ flow. Equivalently, since each warehouse can supply up to $s_j$ vaccines and each country can receive up to $c_i$ vaccines, it must be that each warehouse $j$ cannot send more than $\min(s_j,c_i)$ vaccines to a given country $i$. Additionally, if $(i,r)\notin$ the list of pairs, $(w_r,s_i)$ cannot send flow, which means warehouse $r$ does not send any vaccines to country $i$. Since the flow $f$ meets all constraints in the original problem, $f$ vaccines can therefore be allocated in total.
+    \item ($f$ vaccines can be allocated $\implies$ flow of $f$ in the network) Assume that $f$ vaccines can be allocated in total. Now, since each warehouse $r$ can supply up to $s_r$ doses in total and each country $i$ is willing to purchase up to $c_i$ doses, each warehouse $r$ cannot send more than $\min(s_r,c_i)$ vaccines to a given country $i$. In addition, each warehouse $r$ can only send vaccines to a country $i$ if $(i,r)\in$ the list of pairs. In the constructed network, this is exactly equivalent to how each $w_r$ can receive at most $s_r$ flow from $s$ and each $v_i$ can send at most $c_i$ flow to $t$, meaning each $(w_r,v_i)$ edge cannot carry a flow of more than $\min(s_r,c_i)$. Moreover, $(w_r,v_i)$ has positive flow only if $(i,r)\in$ the list of pairs. Thus, a flow of $f$ is feasible in the network.
+\end{itemize} This proves the one-to-one correspondence, meaning that maximizing the flow of the network is equivalent to maximizing the total number of vaccines that can be allocated, as desired.
+
+\end{document}
