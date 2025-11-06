@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\usepackage{fullpage, parskip, amsmath, amsthm, amssymb, algorithm, algpseudocode}
+\usepackage{algorithm, algpseudocode, amsmath, amsthm, amssymb, fullpage, parskip}
 
 \begin{document}
 
@@ -119,5 +119,6 @@ d) For the algorithm, since it sorts the employee twice, it only needs to compar
 \end{algorithm}
 
 The algorithm runs in $O(n^2)$ time since there can be at most $n$ projects and $n$ iterations in the while loop. For each project, the algorithm loops over all $\leq n$ employees assigned to it and performs a constant amount of work. Also, sorting the employees takes $O(n\log n)$ time, and moving employees from one project to another takes $O(n)$ time overall due to the linked list implementation.
+
 
 \end{document}
